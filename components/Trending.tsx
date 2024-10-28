@@ -1,35 +1,71 @@
 import { useState } from "react";
-import { ResizeMode, Video } from "expo-av";
+import { ResizeMode, Video, AVPlaybackStatus, AVPlaybackStatusSuccess } from "expo-av";
 import * as Animatable from "react-native-animatable";
 import {
   FlatList,
   Image,
   ImageBackground,
   TouchableOpacity,
+  ViewToken,
+  ViewStyle,
+  TextStyle,
+  ImageStyle,
 } from "react-native";
 
 import { icons } from "../constants";
+import { Models } from "react-native-appwrite";
 
-const zoomIn = {
-  0: {
-    scale: 0.9,
+interface PostItem extends Models.Document {
+  $id: string;
+  video: string;
+  thumbnail: string;
+  title: string;
+  creator: {
+    username: string;
+    avatar: string;
+  };
+}
+
+interface TrendingItemProps {
+  activeItem: string;
+  item: PostItem;
+}
+
+interface TrendingProps {
+  posts: PostItem[];
+}
+
+type CombinedStyle = TextStyle & ViewStyle & ImageStyle;
+
+const zoomIn: Animatable.CustomAnimation<CombinedStyle> = {
+  from: {
+    transform: [{ scale: 0.9 }],
   },
-  1: {
-    scale: 1,
+  to: {
+    transform: [{ scale: 1 }],
   },
 };
 
-const zoomOut = {
-  0: {
-    scale: 1,
+const zoomOut: Animatable.CustomAnimation<CombinedStyle> = {
+  from: {
+    transform: [{ scale: 1 }],
   },
-  1: {
-    scale: 0.9,
+  to: {
+    transform: [{ scale: 0.9 }],
   },
 };
 
-const TrendingItem = ({ activeItem, item }) => {
-  const [play, setPlay] = useState(false);
+export const TrendingItem: React.FC<TrendingItemProps> = ({ activeItem, item }) => {
+  const [play, setPlay] = useState<boolean>(false);
+
+  const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+    if (status.isLoaded && !status.isBuffering) {
+      const playbackStatus = status as AVPlaybackStatusSuccess;
+      if (playbackStatus.didJustFinish) {
+        setPlay(false);
+      }
+    }
+  };
 
   return (
     <Animatable.View
@@ -44,11 +80,7 @@ const TrendingItem = ({ activeItem, item }) => {
           resizeMode={ResizeMode.CONTAIN}
           useNativeControls
           shouldPlay
-          onPlaybackStatusUpdate={(status) => {
-            if (status.didJustFinish) {
-              setPlay(false);
-            }
-          }}
+          onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
         />
       ) : (
         <TouchableOpacity
@@ -75,12 +107,12 @@ const TrendingItem = ({ activeItem, item }) => {
   );
 };
 
-const Trending = ({ posts }) => {
-  const [activeItem, setActiveItem] = useState(posts[0]);
+export const Trending: React.FC<TrendingProps> = ({ posts }) => {
+  const [activeItem, setActiveItem] = useState<string>(posts[0]?.$id);
 
-  const viewableItemsChanged = ({ viewableItems }) => {
+  const viewableItemsChanged = ({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems.length > 0) {
-      setActiveItem(viewableItems[0].key);
+      setActiveItem(viewableItems[0].key as string);
     }
   };
 
@@ -96,9 +128,7 @@ const Trending = ({ posts }) => {
       viewabilityConfig={{
         itemVisiblePercentThreshold: 70,
       }}
-      contentOffset={{ x: 170 }}
+      contentOffset={{ x: 170, y: 0 }}  // Providing both x and y values
     />
   );
 };
-
-export default Trending;

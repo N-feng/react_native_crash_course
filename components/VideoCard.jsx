@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 
 import { icons } from "../constants";
 
-const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
+export const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
   const [play, setPlay] = useState(false);
 
   return (
@@ -75,5 +75,3 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
     </View>
   );
 };
-
-export default VideoCard;

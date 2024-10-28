@@ -1,29 +1,51 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FlatList, Image, RefreshControl, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, RefreshControl, Text, View } from "react-native";
 
 import { images } from "../../constants";
-import useAppwrite from "../../lib/useAppwrite";
-import { getAllPosts, getLatestPosts } from "../../lib/appwrite";
-import { EmptyState, SearchInput, Trending, VideoCard } from "../../components";
+import { usePostStore } from "@/store/usePostStore";
+import { SearchInput } from "@/components/SearchInput";
+import { EmptyState } from "@/components/EmptyState";
+import { Trending } from "@/components/Trending";
+import { VideoCard } from "@/components/VideoCard";
+import { CustomButton } from "@/components/CustomButton";
 
 const Home = () => {
-  const { data: posts, refetch } = useAppwrite(getAllPosts);
-  const { data: latestPosts } = useAppwrite(getLatestPosts);
-
+  const { posts, fetchAllPosts, loading: loadingAllPosts, error: errorAllPosts, latestPosts, fetchLatestPosts, loading: loadingLatestPosts, error: errorLatestPosts } = usePostStore();
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    fetchAllPosts();
+    fetchLatestPosts();
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetch();
+    await fetchAllPosts();
+    await fetchLatestPosts();
     setRefreshing(false);
   };
 
-  // one flatlist
-  // with list header
-  // and horizontal flatlist
+  const loading = loadingAllPosts || loadingLatestPosts;
+  const error = errorAllPosts || errorLatestPosts;
 
-  //  we cannot do that with just scrollview as there's both horizontal and vertical scroll (two flat lists, within trending)
+  if (loading) {
+    return (
+      <SafeAreaView className="bg-primary h-full flex justify-center items-center">
+        <ActivityIndicator size="large" color="#ffffff" />
+        <Text className="text-white mt-4">Loading videos...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView className="bg-primary h-full flex justify-center items-center">
+        <Text className="text-red-500 text-lg">Failed to load videos.</Text>
+        <CustomButton title="Retry" handlePress={() => { fetchAllPosts(); fetchLatestPosts(); }} containerStyles="mt-4" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="bg-primary">

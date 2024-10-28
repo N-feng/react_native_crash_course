@@ -1,12 +1,23 @@
-import { StatusBar } from "expo-status-bar";
+import { Image, ImageSourcePropType, Text, View } from "react-native";
+import React from 'react'
 import { Redirect, Tabs } from "expo-router";
-import { Image, Text, View } from "react-native";
 
-import { icons } from "../../constants";
-import { Loader } from "../../components";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
+import icons from "../../constants/icons";
 
-const TabIcon = ({ icon, color, name, focused }) => {
+type Icon = {
+  icon: ImageSourcePropType,
+  color: string,
+  name: string,
+  focused: boolean,
+}
+
+const TabIcon = ({ 
+  icon, 
+  color, 
+  name, 
+  focused 
+}: Icon) => {
+  console.log("icons", icons.bookmark);
   return (
     <View className="flex items-center justify-center gap-2">
       <Image
@@ -26,10 +37,6 @@ const TabIcon = ({ icon, color, name, focused }) => {
 };
 
 const TabLayout = () => {
-  // const user = useCurrentUser();
-
-  // if (!user) return <Redirect href="/sign-in" />;
-
   return (
     <>
       <Tabs
@@ -107,9 +114,6 @@ const TabLayout = () => {
           }}
         />
       </Tabs>
-
-      {/* <Loader isLoading={loading} /> */}
-      <StatusBar backgroundColor="#161622" style="light" />
     </>
   );
 };

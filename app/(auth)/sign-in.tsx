@@ -4,35 +4,43 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
 
 import { images } from "../../constants";
-import { CustomButton, FormField } from "../../components";
-import { getCurrentUser, signIn } from "../../lib/appwrite";
-import { useGlobalContext } from "../../context/GlobalProvider";
+import { useGlobalContext } from "@/context/GlobalProvider";
+import { CustomButton } from "../../components/CustomButton";
+import { FormField } from "../../components/FormField";
+import { getCurrentUser, signIn } from "@/lib/appwrite";
+
+interface FormFields {
+    email: string;
+    password: string;
+}
 
 const SignIn = () => {
-  // const { setUser, setIsLogged } = useGlobalContext();
-  const [isSubmitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({
+  const { setUser, setIsLogged } = useGlobalContext();
+  const [form, setForm] = useState<FormFields>({
     email: "",
     password: "",
   });
+  const [isSubmitting, setSubmitting] = useState<boolean>(false);
 
   const submit = async () => {
-    if (form.email === "" || form.password === "") {
+    const { email, password } = form;
+
+    if (email === "" || password === "") {
       Alert.alert("Error", "Please fill in all fields");
     }
 
     setSubmitting(true);
 
     try {
-      await signIn(form.email, form.password);
+      await signIn({ email, password });
       const result = await getCurrentUser();
-      // setUser(result);
-      // setIsLogged(true);
+      setUser(result);
+      setIsLogged(true);
 
       Alert.alert("Success", "User signed in successfully");
       router.replace("/home");
-    } catch (error) {
-      Alert.alert("Error", error.message);
+    } catch (error: any) {
+      Alert.alert("Error", error?.message);
     } finally {
       setSubmitting(false);
     }
@@ -62,6 +70,7 @@ const SignIn = () => {
             value={form.email}
             handleChangeText={(e) => setForm({ ...form, email: e })}
             otherStyles="mt-7"
+            placeholder="johndoe@gmail.com"
             keyboardType="email-address"
           />
 
@@ -69,6 +78,7 @@ const SignIn = () => {
             title="Password"
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
+            placeholder="12345678"
             otherStyles="mt-7"
           />
 

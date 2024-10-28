@@ -1,50 +1,78 @@
 import {
-  Account,
-  Avatars,
-  Client,
-  Databases,
-  ID,
-  Query,
-  Storage,
-} from "react-native-appwrite";
+    Account,
+    Avatars,
+    Client,
+    Databases,
+    ID,
+    Query,
+    Storage,
+  } from "react-native-appwrite";
 
-export const appwriteConfig = {
-  endpoint: "https://cloud.appwrite.io/v1",
-  platform: "com.nf.sora",
-  projectId: "671cf07a003873dc6a30",
-  storageId: "671cf2de0010bb314304",
-  databaseId: "671cf194002ca7cf39a3",
-  userCollectionId: "671cf1a800379bddb98b",
-  videoCollectionId: "671cf1c0001c5b8552ec",
+import { appwriteConfig } from './appwriteConfig';
+
+export type PostItem = {
+    title: string;
+    thumbnail: string;
+    video: string;
+    prompt: string;
+    $id: string;
+    $createdAt: string;
+    $updatedAt: string;
+    $permissions: any[];
+    $databaseId: string;
+    $collectionId: string;
+    creator: Creator;
 };
+
+export interface Creator {
+  username: string;
+  email: string;
+  avatar: string;
+  accountId: string;
+  $id: string;
+  $createdAt: string;
+  $updatedAt: string;
+  $permissions: any[];
+  $databaseId: string;
+  $collectionId: string;
+}
 
 const client = new Client();
 
 client
-  .setEndpoint(appwriteConfig.endpoint)
-  .setProject(appwriteConfig.projectId)
-  .setPlatform(appwriteConfig.platform);
+    .setEndpoint(appwriteConfig.endpoint) 
+    .setProject(appwriteConfig.projectId) 
+    .setPlatform(appwriteConfig.platform)
+;
 
-const account = new Account(client);
-const storage = new Storage(client);
-const avatars = new Avatars(client);
-const databases = new Databases(client);
+export const account = new Account(client);
+export const avatars = new Avatars(client);
+export const databases = new Databases(client);
+export const storage = new Storage(client);
 
 // Register user
-export async function createUser(email, password, username) {
+export async function createUser({
+  email,
+  password,
+  username,
+}: {
+  email: string;
+  password: string;
+  username: string;
+}) {
   try {
     const newAccount = await account.create(
       ID.unique(),
       email,
       password,
-      username
+      username,
     );
+
+    console.log("newAccount", newAccount);
 
     if (!newAccount) throw Error;
 
     const avatarUrl = avatars.getInitials(username);
-
-    await signIn(email, password);
 
     const newUser = await databases.createDocument(
       appwriteConfig.databaseId,
@@ -55,47 +83,62 @@ export async function createUser(email, password, username) {
         email: email,
         username: username,
         avatar: avatarUrl,
-      }
+      },
     );
+
+    console.log("newUser", newUser);
+
+    await signIn({ email, password });
 
     return newUser;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error);
   }
 }
 
 // Sign In
-export async function signIn(email, password) {
+export async function signIn({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) {
   try {
-    const session = await account.createEmailSession(email, password);
-
+    // await account.deleteSession("current");
+    const session = await account.createEmailPasswordSession(email, password);
+    console.log("session", session);
     return session;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error);
   }
 }
 
 // Get Account
-export async function getAccount() {
-  try {
-    const currentAccount = await account.get();
-
-    return currentAccount;
-  } catch (error) {
-    throw new Error(error);
-  }
-}
+// export async function getAccount() {
+//   try {
+//     console.log("account", account);
+//     const currentAccount = await account.get();
+//     console.log("currentAccount", currentAccount);
+//     return currentAccount;
+//   } catch (error) {
+//     // @ts-ignore
+//     throw new Error(error);
+//   }
+// }
 
 // Get Current User
 export async function getCurrentUser() {
   try {
-    const currentAccount = await getAccount();
+    const currentAccount = await account.get();
     if (!currentAccount) throw Error;
 
     const currentUser = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
-      [Query.equal("accountId", currentAccount.$id)]
+      [Query.equal("accountId", currentAccount.$id)],
     );
 
     if (!currentUser) throw Error;
@@ -114,12 +157,13 @@ export async function signOut() {
 
     return session;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error);
   }
 }
 
 // Upload File
-export async function uploadFile(file, type) {
+export async function uploadFile({ file, type }: { file: any; type: string }) {
   if (!file) return;
 
   const { mimeType, ...rest } = file;
@@ -129,18 +173,25 @@ export async function uploadFile(file, type) {
     const uploadedFile = await storage.createFile(
       appwriteConfig.storageId,
       ID.unique(),
-      asset
+      asset,
     );
 
-    const fileUrl = await getFilePreview(uploadedFile.$id, type);
+    const fileUrl = await getFilePreview({ fileId: uploadedFile.$id, type });
     return fileUrl;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error);
   }
 }
 
 // Get File Preview
-export async function getFilePreview(fileId, type) {
+export async function getFilePreview({
+  fileId,
+  type,
+}: {
+  fileId: string;
+  type: string;
+}) {
   let fileUrl;
 
   try {
@@ -152,8 +203,9 @@ export async function getFilePreview(fileId, type) {
         fileId,
         2000,
         2000,
+        // @ts-ignore
         "top",
-        100
+        100,
       );
     } else {
       throw new Error("Invalid file type");
@@ -163,16 +215,17 @@ export async function getFilePreview(fileId, type) {
 
     return fileUrl;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error);
   }
 }
 
 // Create Video Post
-export async function createVideoPost(form) {
+export async function createVideoPost(form: any) {
   try {
     const [thumbnailUrl, videoUrl] = await Promise.all([
-      uploadFile(form.thumbnail, "image"),
-      uploadFile(form.video, "video"),
+      uploadFile({ file: form.thumbnail, type: "image" }),
+      uploadFile({ file: form.video, type: "video" }),
     ]);
 
     const newPost = await databases.createDocument(
@@ -185,11 +238,12 @@ export async function createVideoPost(form) {
         video: videoUrl,
         prompt: form.prompt,
         creator: form.userId,
-      }
+      },
     );
 
     return newPost;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error);
   }
 }
@@ -199,43 +253,46 @@ export async function getAllPosts() {
   try {
     const posts = await databases.listDocuments(
       appwriteConfig.databaseId,
-      appwriteConfig.videoCollectionId
+      appwriteConfig.videoCollectionId,
     );
 
-    return posts.documents;
+    return posts.documents as PostItem[];
   } catch (error) {
+    // @ts-ignore
     throw new Error(error);
   }
 }
 
 // Get video posts created by user
-export async function getUserPosts(userId) {
+export async function getUserPosts(userId: string) {
   try {
     const posts = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.videoCollectionId,
-      [Query.equal("creator", userId)]
+      [Query.equal("creator", userId)],
     );
 
     return posts.documents;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error);
   }
 }
 
 // Get video posts that matches search query
-export async function searchPosts(query) {
+export async function searchPosts(query: string) {
   try {
     const posts = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.videoCollectionId,
-      [Query.search("title", query)]
+      [Query.search("title", query)],
     );
 
     if (!posts) throw new Error("Something went wrong");
 
     return posts.documents;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error);
   }
 }
@@ -246,11 +303,12 @@ export async function getLatestPosts() {
     const posts = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.videoCollectionId,
-      [Query.orderDesc("$createdAt"), Query.limit(7)]
+      [Query.orderDesc("$createdAt"), Query.limit(7)],
     );
 
     return posts.documents;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error);
   }
 }

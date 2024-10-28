@@ -4,13 +4,22 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
 
 import { images } from "../../constants";
-import { createUser } from "../../lib/appwrite";
-import { CustomButton, FormField } from "../../components";
-// import { useGlobalContext } from "../../context/GlobalProvider";
+import { useGlobalContext } from "@/context/GlobalProvider";
+import { CustomButton } from "../../components/CustomButton";
+import { FormField } from "../../components/FormField";
+// import { useAuthStore } from "@/store/useAuthStore";
+import { createUser } from "@/lib/appwrite";
 
-const SignUp = () => {
-  // const { setUser, setIsLogged } = useGlobalContext();
+type SignUpProps = {};
 
+interface FormFields {
+    email: string;
+    password: string;
+    username: string;
+}
+
+const SignUp: React.FC<SignUpProps> = () => {
+  const { setUser, setIsLogged } = useGlobalContext();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     username: "",
@@ -18,20 +27,37 @@ const SignUp = () => {
     password: "",
   });
 
+  // const createAccount = useAuthStore((state) => state.createAccount);
+
   const submit = async () => {
+    if (form.email === "" || form.password === "") {
+      Alert.alert("Error", "Please fill in all fields");
+    }
+
+    setSubmitting(true);
+
     if (form.username === "" || form.email === "" || form.password === "") {
       Alert.alert("Error", "Please fill in all fields");
     }
 
     setSubmitting(true);
     try {
-      const result = await createUser(form.email, form.password, form.username);
-      // setUser(result);
-      // setIsLogged(true);
+      // const result = await createAccount(form.email, form.password, form.username);
+      
+      // if (result.success) {
+      //   router.push("/home");
+      // } else if (result.error) {
+      //     Alert.alert("Error", result.error.message);
+      // }
+      const { email, password, username } = form;
+      const result = await createUser({ email, password, username });
+      console.log("result", result);
+      setUser(result);
+      setIsLogged(true);
 
       router.replace("/home");
-    } catch (error) {
-      Alert.alert("Error", error.message);
+    } catch (error: any) {
+      Alert.alert("Error", error?.message);
     } finally {
       setSubmitting(false);
     }
@@ -61,6 +87,7 @@ const SignUp = () => {
             value={form.username}
             handleChangeText={(e) => setForm({ ...form, username: e })}
             otherStyles="mt-10"
+            placeholder="johndoe"
           />
 
           <FormField
@@ -69,6 +96,7 @@ const SignUp = () => {
             handleChangeText={(e) => setForm({ ...form, email: e })}
             otherStyles="mt-7"
             keyboardType="email-address"
+            placeholder="johndoe@gmail.com"
           />
 
           <FormField
@@ -76,6 +104,7 @@ const SignUp = () => {
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
+            placeholder="12345678"
           />
 
           <CustomButton

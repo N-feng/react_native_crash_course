@@ -1,14 +1,9 @@
-import { Redirect, Stack } from "expo-router";
+import { View, Text } from 'react-native'
 import { StatusBar } from "expo-status-bar";
-
-import { Loader } from "../../components";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import React from 'react'
+import { Redirect, Stack } from "expo-router";
 
 const AuthLayout = () => {
-  // const user = useCurrentUser();
-
-  // if (!user) return <Redirect href="/home" />;
-
   return (
     <>
       <Stack>
@@ -26,7 +21,6 @@ const AuthLayout = () => {
         />
       </Stack>
 
-      {/* <Loader isLoading={loading} /> */}
       <StatusBar backgroundColor="#161622" style="light" />
     </>
   );

@@ -2,15 +2,25 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
 
 import { icons } from "../constants";
+import { KeyboardTypeOptions } from "react-native";
 
-const FormField = ({
+type FormFieldProps = {
+  title: string;
+  value: string;
+  placeholder: string;
+  handleChangeText: (text: string) => void;
+  otherStyles?: string;
+  keyboardType?: KeyboardTypeOptions;
+}
+
+export const FormField = ({
   title,
   value,
   placeholder,
   handleChangeText,
   otherStyles,
   ...props
-}) => {
+}: FormFieldProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -41,5 +51,3 @@ const FormField = ({
     </View>
   );
 };
-
-export default FormField;

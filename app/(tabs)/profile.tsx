@@ -1,29 +1,78 @@
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Image, FlatList, TouchableOpacity } from "react-native";
+import { View, Image, FlatList, TouchableOpacity, ActivityIndicator, Text } from "react-native";
 
 import { icons } from "../../constants";
-import useAppwrite from "../../lib/useAppwrite";
-import { getUserPosts, signOut } from "../../lib/appwrite";
-import { useGlobalContext } from "../../context/GlobalProvider";
-import { EmptyState, InfoBox, VideoCard } from "../../components";
+
+import { useAuthStore } from "@/store/useAuthStore";
+import { usePostStore } from "@/store/usePostStore";
+
+import { InfoBox } from "@/components/InfoBox";
+import { EmptyState } from "@/components/EmptyState";
+import { VideoCard } from "@/components/VideoCard";
+import { Models } from "react-native-appwrite";
+import { useEffect } from "react";
+import { CustomButton } from "@/components/CustomButton";
+
+// Define the structure of a post item
+interface PostItem extends Models.Document {
+  video: string;
+  thumbnail: string;
+  title: string;
+  creator: {
+    username: string;
+    avatar: string;
+  };
+}
+
+// Define the structure of the user object in the global context
+interface User {
+  $id: string;
+  username: string;
+  avatar: string;
+}
 
 const Profile = () => {
-  const { user, setUser, setIsLogged } = useGlobalContext();
-  const { data: posts } = useAppwrite(() => getUserPosts(user.$id));
+  const { loggedIn, user } = useAuthStore();
+  
+  // Ensure `user` is typed correctly
+  const { error, loading, userPosts, fetchUserPosts } = usePostStore();
+
+  const signOut = useAuthStore((state) => state.logout);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserPosts(user.$id);
+    }
+  },[])
+
+  if (loading) {
+    return (
+      <SafeAreaView className="bg-primary h-full flex justify-center items-center">
+        <ActivityIndicator size="large" color="#ffffff" />
+        <Text className="text-white mt-4">Loading videos...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView className="bg-primary h-full flex justify-center items-center">
+        <Text className="text-red-500 text-lg">Failed to load videos.</Text>
+        <CustomButton title="Retry" handlePress={() => { fetchUserPosts(user?.$id as string); }} containerStyles="mt-4" />
+      </SafeAreaView>
+    );
+  }
 
   const logout = async () => {
     await signOut();
-    setUser(null);
-    setIsLogged(false);
-
     router.replace("/sign-in");
   };
 
   return (
     <SafeAreaView className="bg-primary h-full">
       <FlatList
-        data={posts}
+        data={userPosts as PostItem[]}
         keyExtractor={(item) => item.$id}
         renderItem={({ item }) => (
           <VideoCard
@@ -69,7 +118,7 @@ const Profile = () => {
 
             <View className="mt-5 flex flex-row">
               <InfoBox
-                title={posts.length || 0}
+                title={userPosts?.length || 0}
                 subtitle="Posts"
                 titleStyles="text-xl"
                 containerStyles="mr-10"

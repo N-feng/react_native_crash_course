@@ -2,9 +2,14 @@ import { router } from "expo-router";
 import { View, Text, Image } from "react-native";
 
 import { images } from "../constants";
-import CustomButton from "./CustomButton";
+import { CustomButton } from "./CustomButton";
 
-const EmptyState = ({ title, subtitle }) => {
+type emptyStateProps = {
+  title: string;
+  subtitle: string;
+}
+
+export const EmptyState = ({ title, subtitle }: emptyStateProps) => {
   return (
     <View className="flex justify-center items-center px-4">
       <Image
@@ -26,5 +31,3 @@ const EmptyState = ({ title, subtitle }) => {
     </View>
   );
 };
-
-export default EmptyState;

@@ -1,20 +1,31 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { getCurrentUser } from "@/lib/appwrite";
 
-import { getCurrentUser } from "../lib/appwrite";
+// import { getCurrentUser } from "../lib/appwrite";
 
-const GlobalContext = createContext();
+export type GlobalContextType = {
+  isLogged: boolean;
+  setIsLogged: (value: boolean) => void;
+  user: any;
+  setUser: (value: any) => void;
+  loading: boolean;
+};
+
+const GlobalContext = createContext({} as GlobalContextType);
 export const useGlobalContext = () => useContext(GlobalContext);
 
-const GlobalProvider = ({ children }) => {
+const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLogged, setIsLogged] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const getLoggedInUser = async () => {
     getCurrentUser()
       .then((res) => {
         if (res) {
+          console.log("res", res);
           setIsLogged(true);
+          // @ts-ignore
           setUser(res);
         } else {
           setIsLogged(false);
@@ -27,6 +38,10 @@ const GlobalProvider = ({ children }) => {
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    getLoggedInUser();
   }, []);
 
   return (
