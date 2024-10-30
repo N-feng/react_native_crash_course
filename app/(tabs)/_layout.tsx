@@ -1,4 +1,5 @@
 import { Image, ImageSourcePropType, Text, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import React from 'react'
 import { Redirect, Tabs } from "expo-router";
 
@@ -17,7 +18,7 @@ const TabIcon = ({
   name, 
   focused 
 }: Icon) => {
-  console.log("icons", icons.bookmark);
+  // console.log("icons", icons.bookmark);
   return (
     <View className="flex items-center justify-center gap-2">
       <Image
@@ -114,6 +115,9 @@ const TabLayout = () => {
           }}
         />
       </Tabs>
+
+      {/*<Loader isLoading={loading} />*/}
+      <StatusBar backgroundColor="#161622" style="light" />
     </>
   );
 };

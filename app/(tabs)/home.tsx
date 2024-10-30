@@ -6,59 +6,40 @@ import { images } from "../../constants";
 import { usePostStore } from "@/store/usePostStore";
 import { SearchInput } from "@/components/SearchInput";
 import { EmptyState } from "@/components/EmptyState";
+import useAppwrite from "@/lib/useAppwrite";
+import { getAllPosts, getLatestPosts } from "@/lib/appwrite";
+import { PostItem } from "@/types/posts";
 import { Trending } from "@/components/Trending";
 import { VideoCard } from "@/components/VideoCard";
 import { CustomButton } from "@/components/CustomButton";
+import {useGlobalContext} from "@/context/GlobalProvider";
 
-const Home = () => {
-  const { posts, fetchAllPosts, loading: loadingAllPosts, error: errorAllPosts, latestPosts, fetchLatestPosts, loading: loadingLatestPosts, error: errorLatestPosts } = usePostStore();
+type HomeProps = {};
+
+const Home: React.FC<HomeProps> = () => {
+  const { data: posts, refetch } = useAppwrite(getAllPosts);
+  const { data: latestPosts } = useAppwrite(getLatestPosts);
   const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    fetchAllPosts();
-    fetchLatestPosts();
-  }, []);
+  const { user } = useGlobalContext();
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchAllPosts();
-    await fetchLatestPosts();
+    await refetch();
     setRefreshing(false);
   };
-
-  const loading = loadingAllPosts || loadingLatestPosts;
-  const error = errorAllPosts || errorLatestPosts;
-
-  if (loading) {
-    return (
-      <SafeAreaView className="bg-primary h-full flex justify-center items-center">
-        <ActivityIndicator size="large" color="#ffffff" />
-        <Text className="text-white mt-4">Loading videos...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView className="bg-primary h-full flex justify-center items-center">
-        <Text className="text-red-500 text-lg">Failed to load videos.</Text>
-        <CustomButton title="Retry" handlePress={() => { fetchAllPosts(); fetchLatestPosts(); }} containerStyles="mt-4" />
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView className="bg-primary">
       <FlatList
         data={posts}
-        keyExtractor={(item) => item.$id}
+        keyExtractor={(item: PostItem) => item.$id}
         renderItem={({ item }) => (
           <VideoCard
             title={item.title}
             thumbnail={item.thumbnail}
             video={item.video}
-            creator={item.creator.username}
-            avatar={item.creator.avatar}
+            creator={item?.creator?.username || "Unknown User"}
+            avatar={item?.creator?.avatar || ""}
           />
         )}
         ListHeaderComponent={() => (
@@ -69,7 +50,7 @@ const Home = () => {
                   Welcome Back
                 </Text>
                 <Text className="text-2xl font-psemibold text-white">
-                  JSMastery
+                  {user?.username || "Unknown User"}
                 </Text>
               </View>
 
@@ -89,7 +70,7 @@ const Home = () => {
                 Latest Videos
               </Text>
 
-              {/* <Trending posts={latestPosts ?? []} /> */}
+              <Trending posts={latestPosts ?? []} />
             </View>
           </View>
         )}

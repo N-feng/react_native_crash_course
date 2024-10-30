@@ -1,48 +1,22 @@
 import {
-    Account,
-    Avatars,
-    Client,
-    Databases,
-    ID,
-    Query,
-    Storage,
-  } from "react-native-appwrite";
+  Account,
+  Avatars,
+  Client,
+  Databases,
+  ID,
+  Query,
+  Storage,
+} from "react-native-appwrite";
+import { PostItem } from "@/types/posts";
 
 import { appwriteConfig } from './appwriteConfig';
-
-export type PostItem = {
-    title: string;
-    thumbnail: string;
-    video: string;
-    prompt: string;
-    $id: string;
-    $createdAt: string;
-    $updatedAt: string;
-    $permissions: any[];
-    $databaseId: string;
-    $collectionId: string;
-    creator: Creator;
-};
-
-export interface Creator {
-  username: string;
-  email: string;
-  avatar: string;
-  accountId: string;
-  $id: string;
-  $createdAt: string;
-  $updatedAt: string;
-  $permissions: any[];
-  $databaseId: string;
-  $collectionId: string;
-}
 
 const client = new Client();
 
 client
-    .setEndpoint(appwriteConfig.endpoint) 
-    .setProject(appwriteConfig.projectId) 
-    .setPlatform(appwriteConfig.platform)
+  .setEndpoint(appwriteConfig.endpoint) 
+  .setProject(appwriteConfig.projectId) 
+  .setPlatform(appwriteConfig.platform)
 ;
 
 export const account = new Account(client);
@@ -167,13 +141,23 @@ export async function uploadFile({ file, type }: { file: any; type: string }) {
   if (!file) return;
 
   const { mimeType, ...rest } = file;
-  const asset = { type: mimeType, ...rest };
+  // const asset = { type: mimeType || type, ...rest };
+  // console.log('file: ', file);
+
+  const asset = {
+    name: file.name,
+    type: file.mimeType || type,
+    size: file.size,
+    uri: file.uri,
+  }
 
   try {
+    // console.log('asset: ', asset);
     const uploadedFile = await storage.createFile(
       appwriteConfig.storageId,
       ID.unique(),
-      asset,
+      // asset,
+      file.file
     );
 
     const fileUrl = await getFilePreview({ fileId: uploadedFile.$id, type });

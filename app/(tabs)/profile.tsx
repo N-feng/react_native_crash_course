@@ -4,8 +4,11 @@ import { View, Image, FlatList, TouchableOpacity, ActivityIndicator, Text } from
 
 import { icons } from "../../constants";
 
-import { useAuthStore } from "@/store/useAuthStore";
-import { usePostStore } from "@/store/usePostStore";
+// import { useAuthStore } from "@/store/useAuthStore";
+// import { usePostStore } from "@/store/usePostStore";
+import useAppwrite from "@/lib/useAppwrite";
+import { getUserPosts, signOut } from "@/lib/appwrite";
+import { useGlobalContext } from "@/context/GlobalProvider";
 
 import { InfoBox } from "@/components/InfoBox";
 import { EmptyState } from "@/components/EmptyState";
@@ -33,47 +36,58 @@ interface User {
 }
 
 const Profile = () => {
-  const { loggedIn, user } = useAuthStore();
+  // const { loggedIn, user } = useAuthStore();
+  const { user, setUser, setIsLogged } = useGlobalContext();
+  const { data: posts } = useAppwrite(() => getUserPosts(user.$id));
   
   // Ensure `user` is typed correctly
-  const { error, loading, userPosts, fetchUserPosts } = usePostStore();
+  // const { error, loading, userPosts, fetchUserPosts } = usePostStore();
 
-  const signOut = useAuthStore((state) => state.logout);
+  // const signOut = useAuthStore((state) => state.logout);
 
-  useEffect(() => {
-    if (user) {
-      fetchUserPosts(user.$id);
-    }
-  },[])
+  // useEffect(() => {
+  //   if (user) {
+  //     fetchUserPosts(user.$id);
+  //   }
+  // },[])
 
-  if (loading) {
-    return (
-      <SafeAreaView className="bg-primary h-full flex justify-center items-center">
-        <ActivityIndicator size="large" color="#ffffff" />
-        <Text className="text-white mt-4">Loading videos...</Text>
-      </SafeAreaView>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <SafeAreaView className="bg-primary h-full flex justify-center items-center">
+  //       <ActivityIndicator size="large" color="#ffffff" />
+  //       <Text className="text-white mt-4">Loading videos...</Text>
+  //     </SafeAreaView>
+  //   );
+  // }
 
-  if (error) {
-    return (
-      <SafeAreaView className="bg-primary h-full flex justify-center items-center">
-        <Text className="text-red-500 text-lg">Failed to load videos.</Text>
-        <CustomButton title="Retry" handlePress={() => { fetchUserPosts(user?.$id as string); }} containerStyles="mt-4" />
-      </SafeAreaView>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <SafeAreaView className="bg-primary h-full flex justify-center items-center">
+  //       <Text className="text-red-500 text-lg">Failed to load videos.</Text>
+  //       <CustomButton title="Retry" handlePress={() => { fetchUserPosts(user?.$id as string); }} containerStyles="mt-4" />
+  //     </SafeAreaView>
+  //   );
+  // }
+
+  // const logout = async () => {
+  //   await signOut();
+  //   router.replace("/sign-in");
+  // };
 
   const logout = async () => {
     await signOut();
+    setUser(null);
+    setIsLogged(false);
+
     router.replace("/sign-in");
   };
 
   return (
     <SafeAreaView className="bg-primary h-full">
       <FlatList
-        data={userPosts as PostItem[]}
-        keyExtractor={(item) => item.$id}
+        // data={userPosts as PostItem[]}
+        data={posts}
+        keyExtractor={(item: any) => item.$id}
         renderItem={({ item }) => (
           <VideoCard
             title={item.title}
@@ -118,7 +132,8 @@ const Profile = () => {
 
             <View className="mt-5 flex flex-row">
               <InfoBox
-                title={userPosts?.length || 0}
+                // title={userPosts?.length || 0}
+                title={posts.length || 0}
                 subtitle="Posts"
                 titleStyles="text-xl"
                 containerStyles="mr-10"

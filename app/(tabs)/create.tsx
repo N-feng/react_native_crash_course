@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { router } from "expo-router";
 import { ResizeMode, Video } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
@@ -11,29 +12,32 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-
-import { icons } from "../../constants";
-import { CustomButton } from "@/components/CustomButton";
+import { useGlobalContext } from "@/context/GlobalProvider";
+import { createVideoPost } from "@/lib/appwrite";
 import { FormField } from "@/components/FormField";
-import { useAuthStore } from "@/store/useAuthStore";
+import { icons } from "@/constants";
+import { CustomButton } from "@/components/CustomButton";
+// import { useAuthStore } from "@/store/useAuthStore";
 import { useUploadStore } from "@/store/useUploadStore";
 
 interface FormState {
   title: string;
-  video: string | null;
-  thumbnail: string | null;
+  video: any;
+  thumbnail: any;
   prompt: string;
 }
 
-const Create: React.FC = () => {
-  const { user } = useAuthStore((state) => ({
-    user: state.user,
-  }));
+type CreateScreenProps = {};
 
-  const { createVideoPost, loading } = useUploadStore((state) => ({
-    createVideoPost: state.createVideoPost,
-    loading: state.loading,
-  }));
+const Create: React.FC<CreateScreenProps> = () => {
+  const { user } = useGlobalContext();
+  // console.log('user: ', user);
+  const [uploading, setUploading] = useState(false);
+
+  // const { createVideoPost, loading } = useUploadStore((state) => ({
+  //   createVideoPost: state.createVideoPost,
+  //   loading: state.loading,
+  // }));
 
   const [form, setForm] = useState<FormState>({
     title: "",
@@ -43,28 +47,34 @@ const Create: React.FC = () => {
   });
 
   const openPicker = async (selectType: "image" | "video") => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes:
+    const result = await DocumentPicker.getDocumentAsync({
+      type:
         selectType === "image"
-          ? ImagePicker.MediaTypeOptions.Images
-          : ImagePicker.MediaTypeOptions.Videos,
-      allowsEditing: false,
-      aspect: [4, 3],
-      quality: 1,
+          ? ["image/png", "image/jpg", "image/jpeg"]
+          : ["video/mp4", "video/gif"],
     });
+    // const result = await ImagePicker.launchImageLibraryAsync({
+    //   mediaTypes:
+    //     selectType === "image"
+    //       ? ImagePicker.MediaTypeOptions.Images
+    //       : ImagePicker.MediaTypeOptions.Videos,
+    //   // allowsEditing: false,
+    //   aspect: [4, 3],
+    //   quality: 1,
+    // });
 
     if (!result.canceled) {
       if (selectType === "image") {
         setForm({
           ...form,
-          thumbnail: result.assets[0].uri,
+          thumbnail: result.assets[0],
         });
       }
 
       if (selectType === "video") {
         setForm({
           ...form,
-          video: result.assets[0].uri,
+          video: result.assets[0],
         });
       }
     } else {
@@ -80,6 +90,7 @@ const Create: React.FC = () => {
       return;
     }
 
+    setUploading(true);
     try {
       await createVideoPost({
         ...form,
@@ -97,6 +108,8 @@ const Create: React.FC = () => {
         thumbnail: null,
         prompt: "",
       });
+
+      setUploading(false);
     }
   };
 
@@ -119,7 +132,7 @@ const Create: React.FC = () => {
           <TouchableOpacity onPress={() => openPicker("video")}>
             {form.video ? (
               <Video
-                source={{ uri: form.video }}
+                source={{ uri: form.video.uri }}
                 className="w-full h-64 rounded-2xl"
                 useNativeControls
                 resizeMode={ResizeMode.COVER}
@@ -148,7 +161,7 @@ const Create: React.FC = () => {
           <TouchableOpacity onPress={() => openPicker("image")}>
             {form.thumbnail ? (
               <Image
-                source={{ uri: form.thumbnail }}
+                source={{ uri: form.thumbnail.uri }}
                 resizeMode="cover"
                 className="w-full h-64 rounded-2xl"
               />
@@ -180,7 +193,7 @@ const Create: React.FC = () => {
           title="Submit & Publish"
           handlePress={submit}
           containerStyles="mt-7"
-          isLoading={loading}
+          isLoading={uploading}
         />
       </ScrollView>
     </SafeAreaView>

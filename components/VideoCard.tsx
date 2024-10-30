@@ -1,11 +1,28 @@
 import { useState } from "react";
-import { ResizeMode, Video } from "expo-av";
+import { AVPlaybackStatus, AVPlaybackStatusSuccess, ResizeMode, Video } from "expo-av";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 
 import { icons } from "../constants";
 
-export const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
-  const [play, setPlay] = useState(false);
+type VideoProps = {
+  title: string;
+  creator: string;
+  avatar: string;
+  thumbnail: string;
+  video: string;
+};
+
+export const VideoCard: React.FC<VideoProps> = ({ title, creator, avatar, thumbnail, video }) => {
+  const [play, setPlay] = useState<boolean>(false);
+
+  const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+    if (status.isLoaded && !status.isBuffering) {
+        const playbackStatus = status as AVPlaybackStatusSuccess;
+        if (playbackStatus.didJustFinish) {
+            setPlay(false);
+        }
+    }
+  };
 
   return (
     <View className="flex flex-col items-center px-4 mb-14">
@@ -47,11 +64,7 @@ export const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
           resizeMode={ResizeMode.CONTAIN}
           useNativeControls
           shouldPlay
-          onPlaybackStatusUpdate={(status) => {
-            if (status.didJustFinish) {
-              setPlay(false);
-            }
-          }}
+          onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
         />
       ) : (
         <TouchableOpacity

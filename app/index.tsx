@@ -8,38 +8,42 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { images } from "../constants";
 import { CustomButton } from "../components/CustomButton";
-import { useAuthStore } from "@/store/useAuthStore";
+// import { useAuthStore } from "@/store/useAuthStore";
+import { useGlobalContext } from "@/context/GlobalProvider";
 
 const App = () => {
-  const { loggedIn, verifySession, loading } = useAuthStore();
-  const [isSessionChecked, setIsSessionChecked] = useState(false);
+  const { loading, isLogged } = useGlobalContext();
 
-  useEffect(() => {
-    const checkSession = async () => {
-      await verifySession(); // Attempt to verify the session
-      setIsSessionChecked(true); // Mark session check as complete
-    };
+  if (!loading && isLogged) return <Redirect href="/home" />;
+  // const { loggedIn, verifySession, loading } = useAuthStore();
+  // const [isSessionChecked, setIsSessionChecked] = useState(false);
 
-    checkSession();
-  }, []);
+  // useEffect(() => {
+  //   const checkSession = async () => {
+  //     await verifySession(); // Attempt to verify the session
+  //     setIsSessionChecked(true); // Mark session check as complete
+  //   };
 
-  if (loading) {
-    return (
-      <SafeAreaView className="bg-primary h-full flex justify-center items-center">
-        <ActivityIndicator size="large" color="#fff" />
-        <Text className="text-white mt-4 text-lg">Loading...</Text>
-        <Image
-          source={images.logo}
-          className="w-[100px] h-[64px] mt-4"
-          resizeMode="contain"
-        />
-      </SafeAreaView>
-    );
-  }
+  //   checkSession();
+  // }, []);
 
-  if (loggedIn && isSessionChecked) {
-    return <Redirect href="/home" />; // Redirect to home if logged in and session is checked
-  }
+  // if (loading) {
+  //   return (
+  //     <SafeAreaView className="bg-primary h-full flex justify-center items-center">
+  //       <ActivityIndicator size="large" color="#fff" />
+  //       <Text className="text-white mt-4 text-lg">Loading...</Text>
+  //       <Image
+  //         source={images.logo}
+  //         className="w-[100px] h-[64px] mt-4"
+  //         resizeMode="contain"
+  //       />
+  //     </SafeAreaView>
+  //   );
+  // }
+
+  // if (loggedIn && isSessionChecked) {
+  //   return <Redirect href="/home" />; // Redirect to home if logged in and session is checked
+  // }
 
   return (
     <SafeAreaView className="bg-primary h-full">
