@@ -2,6 +2,7 @@ import { Image, ImageSourcePropType, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import React from 'react'
 import { Redirect, Tabs } from "expo-router";
+import { Fragment } from "react";
 
 import icons from "../../constants/icons";
 
@@ -39,7 +40,7 @@ const TabIcon = ({
 
 const TabLayout = () => {
   return (
-    <>
+    <Fragment>
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: "#FFA001",
@@ -118,7 +119,7 @@ const TabLayout = () => {
 
       {/*<Loader isLoading={loading} />*/}
       <StatusBar backgroundColor="#161622" style="light" />
-    </>
+    </Fragment>
   );
 };
 

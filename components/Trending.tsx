@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ResizeMode, Video, AVPlaybackStatus, AVPlaybackStatusSuccess } from "expo-av";
 import * as Animatable from "react-native-animatable";
 import {
@@ -56,6 +56,8 @@ const zoomOut: Animatable.CustomAnimation<CombinedStyle> = {
 };
 
 export const TrendingItem: React.FC<TrendingItemProps> = ({ activeItem, item }) => {
+  const video = useRef(null);
+  const [status, setStatus] = useState({});
   const [play, setPlay] = useState<boolean>(false);
 
   const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {

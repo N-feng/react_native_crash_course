@@ -4,12 +4,14 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { NativeWindStyleSheet } from "nativewind";
 import GlobalProvider from "@/context/GlobalProvider";
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-// Import your global CSS file
-import "../global.css";
+NativeWindStyleSheet.setOutput({
+  default: "native",
+});
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();

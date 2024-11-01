@@ -29,7 +29,7 @@ const Home: React.FC<HomeProps> = () => {
   };
 
   return (
-    <SafeAreaView className="bg-primary">
+    <SafeAreaView className="bg-primary h-full">
       <FlatList
         data={posts}
         keyExtractor={(item: PostItem) => item.$id}
